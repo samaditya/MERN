@@ -15,7 +15,7 @@ mongoose.set('useFindAndModify', false);
 router.get('/me',auth , async (req , res) =>{
     try{
         const profile = await Profile.findOne({ user: req.user.id})
-        .populate('User' , ['name', 'avatar']);
+        .populate('users' , ['name', 'avatar']);
 
         if(!profile){
             return res.status(400).json({msg : 'no profile for this user'})
@@ -47,7 +47,6 @@ async(req , res) =>{
         return res.status(400).json({errors : errors.array()}); 
     }
     const{
-        user,
         company,
         website,
         location,
@@ -124,7 +123,7 @@ async(req , res) =>{
 router.get('/user/:user_id' , async(req , res) =>{
     try {
         const profile = await Profile.findOne({user : req.params.user_id})
-        .populate('User' , ['name' , 'avatar']);
+        .populate('users' , ['name' , 'avatar']);
 
         if(!profile){ 
             return res.status(400).json({msg  : 'There is no profile for this user'})
@@ -146,7 +145,7 @@ router.get('/user/:user_id' , async(req , res) =>{
 
 router.get('/' , async(req , res) =>{
     try {
-        const profiles = await Profile.find().populate('User' , ['name' , 'avatar']);
+        const profiles = await Profile.find().populate('users' , ['name' , 'avatar']);
          res.json(profiles);
     } catch (err) {
         console.error(err.messgage);
