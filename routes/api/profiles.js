@@ -15,7 +15,7 @@ mongoose.set('useFindAndModify', false);
 router.get('/me',auth , async (req , res) =>{
     try{
         const profile = await Profile.findOne({ user: req.user.id})
-        .populate('users' , ['name', 'avatar']);
+        .populate('user' , ['name', 'avatar']);
 
         if(!profile){
             return res.status(400).json({msg : 'no profile for this user'})
@@ -123,7 +123,7 @@ async(req , res) =>{
 router.get('/user/:user_id' , async(req , res) =>{
     try {
         const profile = await Profile.findOne({user : req.params.user_id})
-        .populate('users' , ['name' , 'avatar']);
+        .populate('user' , ['name' , 'avatar']);
 
         if(!profile){ 
             return res.status(400).json({msg  : 'There is no profile for this user'})
@@ -145,7 +145,7 @@ router.get('/user/:user_id' , async(req , res) =>{
 
 router.get('/' , async(req , res) =>{
     try {
-        const profiles = await Profile.find().populate('users' , ['name' , 'avatar']);
+        const profiles = await Profile.find().populate('user' , ['name' , 'avatar']);
          res.json(profiles);
     } catch (err) {
         console.error(err.messgage);
@@ -153,4 +153,58 @@ router.get('/' , async(req , res) =>{
         
     }
 })
+
+// @route   DELETE api/profiles
+// @ desc   Delete profile ,user & posts
+// @access  Private
+
+router.delete('/' , auth , async(req , res) => {
+    try {
+        //todo - remove users posts
+
+        //Remove Profile
+        await Profile.findOneAndRemove({user : req.user.id});
+        await User.findOneAndRemove({_id : req.user.id});
+        return res.json({ msg : 'user deleted'});
+        
+    } catch (err) {
+        console.error('err.message');
+        return res.status(500).send('Server Error');
+        
+    }
+})
+
+// @route    PUT api/profiles/experience
+// @desc     Add profile experience
+// @access   Private
+router.put(
+    '/experience',
+    auth,
+    check('title', 'Title is required').notEmpty(),
+    check('company', 'Company is required').notEmpty(),
+    check('from', 'From date is required and needs to be from the past')
+      .notEmpty(),
+    async (req, res) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+  
+      try {
+        const profile = await Profile.findOne({ user: req.user.id });
+        console.log(req.body);
+  
+        profile.experience.unshift(req.body);
+  
+        await profile.save();
+  
+        res.json(profile);
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+      }
+    }
+  );
+  
+
 module.exports = router;
